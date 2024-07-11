@@ -4,7 +4,7 @@ from sqlalchemy import insert
 app = Flask(__name__)
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://CBP:CBP1234@eitayalter.ddns.net/CBP"
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://CBP:CBP!234@eitayalter.ddns.net/CBP"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -47,17 +47,15 @@ class Dispatcher(db.Model):
     password = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(100), nullable=True)
 
-
-
-
 @app.get('/users')
 def get_users():
-    users = User.query.all()
-    return jsonify([{'id': user.id, 'name': user.name, 'email': user.email} for user in users])
+    users = Users.query.all()
+    return jsonify([{'password': user.password, 'email': user.email} for user in users])
 
 @app.post('/login')
 def test(): 
     data = request.get_json()
+    user = None
     try: 
         user = Users.query.filter_by(email=data.get('email'), password=data.get('password')).first()
         if user is not None: 
@@ -67,7 +65,7 @@ def test():
     except:
         print("not ok")
     
-    return "res ok"
+    return jsonify({'email':user.email, 'password':user.password})
 
 
 
