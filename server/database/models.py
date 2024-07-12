@@ -1,11 +1,7 @@
-from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from server import getDB
+db = SQLAlchemy()
 
-db = getDB()
-
-
-class User(db.Model): 
+class Users(db.Model):
     __tablename__ = 'Users'
     email = db.Column(db.String(100), primary_key=True)
     password = db.Column(db.String(100), nullable=False)
@@ -42,5 +38,4 @@ class Dispatcher(db.Model):
     userName = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(100), nullable=True)
-
 
