@@ -1,13 +1,13 @@
 # To build flask docker
 ## Enter to server directory and run: 
 ```dockerfile
-docker build -t eitayalter/flask-server:LEATEST .
+docker build -t altereitay/flask-server .
 ```
 
 # To build react docker
 ## Enter to client directory and run: 
 ```dockerfile
-docker build -t eitayalter/react-app:LEATEST .
+docker build -t altereitay/react-app .
 ```
 
 # To build compose
