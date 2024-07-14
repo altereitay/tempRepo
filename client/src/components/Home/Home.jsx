@@ -1,6 +1,6 @@
 import React from 'react'
 
-const HomePage = () => {
+const HomePage = () => { 
     return ( 
         <div className='home'> 
             <h1>HomePage</h1>
