@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import "../Register/Register.css";
+import "../EditProfile/EditProfile.css";
 
 const PasswordErrorMessage = () => {
   return (
@@ -89,7 +89,7 @@ function EditProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/editProfile', {
+      const response = await fetch('/auth/editProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -108,16 +108,13 @@ function EditProfile() {
         throw new Error("Network response was not ok");
       } else {
         alert('Profile updated successfully');
-        nav("/profile");
+        nav("/Home");
       }
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
-  if (!userData) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="EditProfile">

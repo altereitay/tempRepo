@@ -33,7 +33,7 @@ const Login = (props) => {
     }
 
     try {
-        const response = await fetch('/login', {
+        const response = await fetch('/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -56,7 +56,9 @@ const Login = (props) => {
             }
             setPassword("");
         } else {
-            nav("/Home");
+            sessionStorage.setItem("token", result.userToken);
+            console.log()
+            nav("/home");
         }
     } catch (error) {
         console.error('Error:', error);

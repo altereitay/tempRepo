@@ -1,9 +1,24 @@
 from flask import Blueprint, request, jsonify
 import bcrypt
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+@auth_bp.post('/editProfile')
+def editProfile(): 
+    data = request.get_json()
+    print(data.get('firstName'))
+    print(data.get('lastName'))
+    print(data.get('email'))
+    print(data.get('phoneNumber'))
+    print(data.get('address'))
+    print(data.get('password'))
+    return "ok"
 
+
+    
 @auth_bp.post('/login')
 def login():
     from database.models import Users
@@ -17,12 +32,14 @@ def login():
     try:
         user = Users.query.filter_by(email=email).first()
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            return jsonify({"message": "Login successful"}), 200
+            userToken = create_access_token(identity=email)
+            return jsonify({"userToken": userToken}), 200
         else:
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e:
         print(f"Exception occurred: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
 
 
 @auth_bp.post('/register')
@@ -59,3 +76,13 @@ def register():
     db.session.add(user_instance)
     db.session.commit()
     return jsonify({"message": "Registration successful"}), 201
+
+@auth_bp.get('/home')
+@jwt_required()
+def home(): 
+    from database.models import Citizen
+    current_user = get_jwt_identity()
+    user = Citizen.query.filter_by(email=current_user).first()
+    print(current_user)
+    return jsonify(userName=user.firstName), 200
+
