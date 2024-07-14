@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import "./Login.css"
+import "../Login/Login.css"
 
 
 
@@ -14,26 +14,25 @@ const Login = (props) => {
   const [passwordError, setPasswordError] = useState('')
 
   const onButtonClick = async () => {
-    
-    setEmailError('')
-    setPasswordError('')
+    setEmailError('');
+    setPasswordError('');
 
     if ('' === email) {
-      setEmailError('Please enter your email')
-      return
+        setEmailError('Please enter your email');
+        return;
     }
-  
+
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      setEmailError('Please enter a valid email')
-      return
+        setEmailError('Please enter a valid email');
+        return;
     }
-  
+
     if ('' === password) {
-      setPasswordError('Please enter a password')
-      return
+        setPasswordError('Please enter a password');
+        return;
     }
-  
-    try{ 
+
+    try {
         const response = await fetch('/login', {
             method: 'POST',
             headers: {
@@ -45,17 +44,26 @@ const Login = (props) => {
             })
         });
 
+        const result = await response.json();
 
-        if(!response.ok){ 
-            throw new Error("Bad Network");
+        if (!response.ok) {
+            if (response.status === 401) {
+                setPasswordError(result.error);
+            } else if (response.status === 400) {
+                setEmailError(result.error);
+            } else {
+                throw new Error("Network response was not ok");
+            }
+            setPassword("");
+        } else {
+            nav("/Home");
         }
-        else{ 
-          nav("/Home")
-        }
-    }catch (error) {
+    } catch (error) {
         console.error('Error:', error);
-      }
-  }
+        setEmailError('Something went wrong, please try again later');
+    }
+};
+
 
   return (
     <div className={'mainContainer'}>
@@ -79,6 +87,7 @@ const Login = (props) => {
           placeholder="Enter your password here"
           onChange={(ev) => setPassword(ev.target.value)}
           className={'inputBox'}
+          type='password'
         />
         <label className="errorLabel">{passwordError}</label>
       </div>
