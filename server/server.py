@@ -6,8 +6,14 @@ from database.models import db
 from report.reports import reports_bp
 from auth.auth import auth_bp
 
+
+from flask_jwt_extended import JWTManager
+
 load_dotenv()
 app = Flask(__name__)
+
+app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET')  
+jwt = JWTManager(app)
 CORS(app)
 
 app.config[
