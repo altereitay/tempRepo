@@ -6,17 +6,6 @@ from flask_jwt_extended import jwt_required
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-@auth_bp.post('/editProfile')
-def editProfile(): 
-    data = request.get_json()
-    print(data.get('firstName'))
-    print(data.get('lastName'))
-    print(data.get('email'))
-    print(data.get('phoneNumber'))
-    print(data.get('address'))
-    print(data.get('password'))
-    return "ok"
-
 
     
 @auth_bp.post('/login')
@@ -31,6 +20,8 @@ def login():
 
     try:
         user = Users.query.filter_by(email=email).first()
+        print(email)
+        print(user)
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             userToken = create_access_token(identity=email)
             return jsonify({"userToken": userToken}), 200
@@ -83,6 +74,56 @@ def home():
     from database.models import Citizen
     current_user = get_jwt_identity()
     user = Citizen.query.filter_by(email=current_user).first()
-    print(current_user)
     return jsonify(userName=user.firstName), 200
 
+@auth_bp.get('/getUserData')
+@jwt_required()
+def getUserData():
+    from database.models import Citizen
+    current_user = get_jwt_identity()
+    user = Citizen.query.filter_by(email=current_user).first()
+    return jsonify(firstName=user.firstName,
+                   lastName=user.lastName,
+                   email=user.email,
+                   phoneNumber=user.phoneNum,
+                   address=user.address
+                   ), 200 
+
+@auth_bp.post('/editProfile')
+@jwt_required()
+def editProfile():
+    from database.models import Citizen, Users, db
+    current_user_email = get_jwt_identity()
+
+    data = request.get_json()
+    new_email = data.get('email')
+    new_phoneNum = data.get('phoneNumber')
+
+    try:
+        citizen = Citizen.query.filter_by(email=current_user_email).first() 
+        user = Users.query.filter_by(email=current_user_email).first()
+
+        if new_email != current_user_email:
+            if Citizen.query.filter_by(email=new_email).first():
+                return jsonify(message='Email is already in use'), 400
+
+        if new_phoneNum != citizen.phoneNum:
+            if Citizen.query.filter_by(phoneNum=new_phoneNum).first():
+                return jsonify(message='Phone number is already in use'), 400
+
+        citizen.firstName = data.get('firstName', citizen.firstName)
+        citizen.lastName = data.get('lastName', citizen.lastName)
+        citizen.email = new_email  
+        citizen.phoneNum = new_phoneNum  
+        citizen.address = data.get('address', citizen.address)
+
+        user.email = new_email
+
+        db.session.commit()
+
+        userToken = create_access_token(identity=new_email)
+        return jsonify(message="Profile updated successfully", token=userToken), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(message=str(e)), 500

@@ -57,7 +57,7 @@ const Login = (props) => {
             setPassword("");
         } else {
             sessionStorage.setItem("token", result.userToken);
-            console.log()
+            console.log(result.userToken)
             nav("/home");
         }
     } catch (error) {

@@ -37,28 +37,38 @@ function EditProfile() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
-  const [password, setPassword] = useState({
-    value: "",
-    isTouched: false,
-  });
-  const [confirmPassword, setConfirmPassword] = useState({
-    value: "",
-    isTouched: false,
-  });
+  // const [password, setPassword] = useState({
+  //   value: "",
+  //   isTouched: false,
+  // });
+  // const [confirmPassword, setConfirmPassword] = useState({
+  //   value: "",
+  //   isTouched: false,
+  // });
 
   const [isFirstNameValid, setIsFirstNameValid] = useState(true);
   const [isLastNameValid, setIsLastNameValid] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
   const [isAddressValid, setIsAddressValid] = useState(true);
-  const [isPasswordValid, setIsPasswordValid] = useState(true);
-  const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(true);
+  // const [isPasswordValid, setIsPasswordValid] = useState(true);
+  // const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/get-user-data');
-        if (!response.ok) throw new Error("Network response was not ok");
+        const token = sessionStorage.getItem("token"); 
+        const response = await fetch('/auth/getUserData', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        
         const data = await response.json();
         setUserData(data);
         setFirstName(data.firstName);
@@ -80,19 +90,21 @@ function EditProfile() {
       lastName &&
       validateEmail(email) &&
       validatePhoneNumber(phoneNumber) &&
-      address &&
-      (password.value.length === 0 || password.value.length >= 8) &&
-      (password.value === confirmPassword.value)
+      address 
+      // && (password.value.length === 0 || password.value.length >= 8) &&
+      // (password.value === confirmPassword.value)
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = sessionStorage.getItem('token')
     try {
       const response = await fetch('/auth/editProfile', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           firstName: firstName,
@@ -100,18 +112,33 @@ function EditProfile() {
           email: email,
           phoneNumber: phoneNumber,
           address: address,
-          password: password.value
+          //password: password.value
         })
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+
+        let errorMessage = 'Profile update failed';
+  
+
+        if (response.status === 400) {
+          const errorData = await response.json();
+          errorMessage = errorData.message;  
+        }
+        
+        alert(errorMessage);  
       } else {
+        const data = await response.json();
+        console.log(data.token);
+        sessionStorage.removeItem("token");
+        sessionStorage.setItem("token", data.token);
+        console.log(sessionStorage.getItem("token"));
         alert('Profile updated successfully');
         nav("/Home");
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('Network error. Please try again.');  
     }
   };
 
@@ -187,7 +214,7 @@ function EditProfile() {
               placeholder="Address"
             />
           </div>
-          <div className="Field">
+          {/* <div className="Field">
             <label>
               Password <sup>{password.isTouched && !isPasswordValid && "*"}</sup>
             </label>
@@ -229,7 +256,7 @@ function EditProfile() {
             {confirmPassword.isTouched && confirmPassword.value !== password.value ? (
               <ConfirmPasswordErrorMessage />
             ) : null}
-          </div>
+          </div> */}
           <button type="submit" disabled={!getIsFormValid()}>
             Update Profile
           </button>
