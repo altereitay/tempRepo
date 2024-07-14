@@ -3,6 +3,7 @@ import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
 import Login from "./components/Login/Login";
 import HomePage from "./components/Home/Home";
 import Map from "./components/Map/Map"
+import CitizenReports from "./components/Reports/CitizenReports";
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
                 <Route path="/" element={<Login/>}/>
                 <Route path="/Map" element={<Map/>}/>
                 <Route path="/Home" element={<HomePage/>}/>
+                <Route path='/reports' element={<CitizenReports/>}/>
             </Routes>
         </Router>
     );

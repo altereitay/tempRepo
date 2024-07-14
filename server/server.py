@@ -1,41 +1,24 @@
 import os
-
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv, dotenv_values
-from database.models import Users, Citizen, Dispatcher, Technician, db
+from dotenv import load_dotenv
+from database.models import db
+from report.reports import reports_bp
+from auth.auth import auth_bp
 
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
 app.config[
-    "SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_URL')}/{os.getenv('MYSQL_DB')}"
+    "SQLALCHEMY_DATABASE_URI"] = (f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}"
+                                  f"@{os.getenv('MYSQL_URL')}/{os.getenv('MYSQL_DB')}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-
-@app.get('/users')
-def get_users():
-    users = Users.query.all()
-    return jsonify([{'password': user.password, 'email': user.email} for user in users])
-
-
-@app.post('/login')
-def test():
-    data = request.get_json()
-    user = None
-    try:
-        user = Users.query.filter_by(email=data.get('email'), password=data.get('password')).first()
-        if user is not None:
-            print("ok")
-        else:
-            print("very not ok")
-    except:
-        print("not ok")
-
-    return jsonify({'email': user.email, 'password': user.password})
+app.register_blueprint(reports_bp)
+app.register_blueprint(auth_bp)
 
 
 if __name__ == "__main__":
