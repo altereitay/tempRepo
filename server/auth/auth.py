@@ -11,6 +11,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 @auth_bp.post('/login')
 def login():
     from database.models import Users
+
     data = request.get_json()
     password = data.get('password')
     email = data.get('email')
@@ -20,8 +21,7 @@ def login():
 
     try:
         user = Users.query.filter_by(email=email).first()
-        print(email)
-        print(user)
+
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             userToken = create_access_token(identity=email)
             return jsonify({"userToken": userToken}), 200
@@ -98,7 +98,8 @@ def editProfile():
     data = request.get_json()
     new_email = data.get('email')
     new_phoneNum = data.get('phoneNumber')
-
+    new_password = data.get('newPassword')
+    
     try:
         citizen = Citizen.query.filter_by(email=current_user_email).first() 
         user = Users.query.filter_by(email=current_user_email).first()
@@ -115,7 +116,11 @@ def editProfile():
         citizen.lastName = data.get('lastName', citizen.lastName)
         citizen.email = new_email  
         citizen.phoneNum = new_phoneNum  
-        citizen.address = data.get('address', citizen.address)
+        citizen.address = data.get('address', citizen.address) 
+        if new_password != "": 
+            hashedPassword = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt(15))
+            user.password = hashedPassword 
+            citizen.password = hashedPassword
 
         user.email = new_email
 
