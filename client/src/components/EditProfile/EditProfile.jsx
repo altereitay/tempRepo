@@ -37,7 +37,8 @@ function EditProfile() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
-  const [password, setPassword] = useState({
+
+  const [newPassword, setNewPassword] = useState({
     value: "",
     isTouched: false,
   });
@@ -51,14 +52,24 @@ function EditProfile() {
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
   const [isAddressValid, setIsAddressValid] = useState(true);
-  const [isPasswordValid, setIsPasswordValid] = useState(true);
+  const [isNewPasswordValid, setIsNewPasswordValid] = useState(true);
   const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/get-user-data');
-        if (!response.ok) throw new Error("Network response was not ok");
+        const token = sessionStorage.getItem("token"); 
+        const response = await fetch('/auth/getUserData', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        
         const data = await response.json();
         setUserData(data);
         setFirstName(data.firstName);
@@ -81,18 +92,20 @@ function EditProfile() {
       validateEmail(email) &&
       validatePhoneNumber(phoneNumber) &&
       address &&
-      (password.value.length === 0 || password.value.length >= 8) &&
-      (password.value === confirmPassword.value)
+      (newPassword.value.length === 0 || newPassword.value.length >= 8) &&
+      (newPassword.value === confirmPassword.value)
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = sessionStorage.getItem('token')
     try {
       const response = await fetch('/auth/editProfile', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           firstName: firstName,
@@ -100,18 +113,32 @@ function EditProfile() {
           email: email,
           phoneNumber: phoneNumber,
           address: address,
-          password: password.value
+          newPassword: newPassword.value
         })
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+
+        let errorMessage = 'Profile update failed';
+  
+
+        if (response.status === 400) {
+          const errorData = await response.json();
+          errorMessage = errorData.message;  
+        }
+        
+        alert(errorMessage);  
       } else {
+        const data = await response.json();
+        sessionStorage.removeItem("token");
+        sessionStorage.setItem("token", data.token);
+        console.log(sessionStorage.getItem("token"));
         alert('Profile updated successfully');
         nav("/Home");
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('Network error. Please try again.');  
     }
   };
 
@@ -189,23 +216,22 @@ function EditProfile() {
           </div>
           <div className="Field">
             <label>
-              Password <sup>{password.isTouched && !isPasswordValid && "*"}</sup>
+              New Password <sup>{newPassword.isTouched && !isNewPasswordValid && "*"}</sup>
             </label>
             <input
-              value={password.value}
+              value={newPassword.value}
               type="password"
               onChange={(e) => {
-                const newPasswordValue = e.target.value;
-                setPassword({ ...password, value: newPasswordValue });
-                setIsPasswordValid(newPasswordValue.length === 0 || newPasswordValue.length >= 8);
-                setIsConfirmPasswordValid(newPasswordValue === confirmPassword.value);
-              }}
+                const newNewPasswordValue = e.target.value;
+                setNewPassword({ ...newPassword, value: newNewPasswordValue });
+                setIsNewPasswordValid(newNewPasswordValue.length === 0 || newNewPasswordValue.length >= 8);
+                setIsConfirmPasswordValid(newNewPasswordValue === confirmPassword.value);
+              } }
               onBlur={() => {
-                setPassword({ ...password, isTouched: true });
-              }}
-              placeholder="Password"
-            />
-            {password.isTouched && password.value.length < 8 && password.value.length > 0 ? (
+                setNewPassword({ ...newPassword, isTouched: true });
+              } }
+              placeholder="New Password" />
+            {newPassword.isTouched && newPassword.value.length < 8 && newPassword.value.length > 0 ? (
               <PasswordErrorMessage />
             ) : null}
           </div>
@@ -219,14 +245,13 @@ function EditProfile() {
               onChange={(e) => {
                 const newConfirmPasswordValue = e.target.value;
                 setConfirmPassword({ ...confirmPassword, value: newConfirmPasswordValue });
-                setIsConfirmPasswordValid(newConfirmPasswordValue === password.value);
-              }}
+                setIsConfirmPasswordValid(newConfirmPasswordValue === newPassword.value);
+              } }
               onBlur={() => {
                 setConfirmPassword({ ...confirmPassword, isTouched: true });
-              }}
-              placeholder="Confirm Password"
-            />
-            {confirmPassword.isTouched && confirmPassword.value !== password.value ? (
+              } }
+              placeholder="Confirm Password" />
+            {confirmPassword.isTouched && confirmPassword.value !== newPassword.value ? (
               <ConfirmPasswordErrorMessage />
             ) : null}
           </div>
